@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClipForge – Auto Video Clipper</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{--bg:#eef0f6;--sf:#fff;--sf2:#f3f4fa;--tx:#12162b;--mu:#636a87;--bd:#d9dcea;--ac:#3f5bff;--hl:#e8970c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f1f;--sf:#131a33;--sf2:#1a2242;--tx:#eceffc;--mu:#9199b8;--bd:#283058;--ac:#6f86ff;--hl:#ffb020}}
+:root[data-theme="dark"]{--bg:#0b0f1f;--sf:#131a33;--sf2:#1a2242;--tx:#eceffc;--mu:#9199b8;--bd:#283058;--ac:#6f86ff;--hl:#ffb020}
+*,*:before,*:after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:16px;margin:0 0 12px}
+p.sub{margin:0 0 16px;color:var(--mu)}
+.top{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:16px}
+.stage{background:#000;border-radius:10px;display:flex;justify-content:center;overflow:hidden}
+canvas{max-width:100%;display:block}
+#cv{max-height:70vh;height:auto}
+#srcv{width:100%;height:auto;border-radius:8px;margin-top:8px}
+label{display:block;font-size:13px;color:var(--mu);margin:10px 0 4px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:110px}
+select,input[type=number],input[type=text]{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);font:inherit}
+input[type=color]{width:100%;height:38px;border:1px solid var(--bd);border-radius:8px;background:var(--sf2);padding:2px}
+input[type=range]{width:100%;accent-color:var(--ac)}
+button{font:inherit;font-weight:600;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);padding:9px 14px;border-radius:9px;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+.btn{font-weight:600;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);padding:6px 10px;border-radius:9px;text-decoration:none;display:inline-block;margin:4px 6px 0 0;font-size:13px}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.drop{border:2px dashed var(--bd);border-radius:12px;padding:22px;text-align:center;color:var(--mu);cursor:pointer}
+.drop.on{border-color:var(--ac);color:var(--tx)}
+.bar{height:8px;background:var(--sf2);border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;width:0;background:var(--ac)}
+.clip{border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:10px;background:var(--sf2)}
+.clip b.sc{color:var(--hl)}
+.ch{display:flex;gap:12px}.ch canvas{flex:0 0 160px;width:160px;height:90px;border-radius:8px;background:#000}.ch>div{flex:1;min-width:0}
+.hot{height:46px;display:flex;align-items:flex-end;gap:1px;margin-top:12px;cursor:pointer}.hot i{flex:1;background:var(--bd);min-width:1px}.hot i.in{background:var(--hl)}
+.note{font-size:12.5px;color:var(--mu);margin:6px 0 0}
+details summary{cursor:pointer;font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--tx);font-size:14px}
+textarea{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx);font:inherit}
+.easy .adv{display:none!important}
+</style></head><body class="easy"><div class="wrap">
+<div class="top"><div><h1>ClipForge</h1>
+<p class="sub">Pick a video from your gallery, find the best moments automatically, export in a vertical frame, then download it and post to Instagram, YouTube or TikTok.</p></div>
+<button id="mode" style="flex:0 0 auto">Switch to Advanced mode</button></div>
+<div class="grid">
+<div>
+ <div class="card"><div class="stage"><canvas id="cv" width="1080" height="1920"></canvas></div>
+  <div class="row" style="margin-top:10px"><button id="pp">Play / Pause</button><button id="snd" aria-pressed="true">Sound: On</button><input type="range" id="seek" min="0" max="1000" value="0" aria-label="Seek" style="flex:3"></div>
+  <p class="note" id="tm">0:00 / 0:00</p>
+  <p class="note">Shortcuts: Space play/pause, I set Start, O set End, M sound, Left/Right arrows move 5 seconds.</p></div>
+</div>
+<div>
+ <div class="card"><h2>1. Choose your video</h2>
+  <label class="drop" id="drop" for="file">Drop your video here or choose it from your gallery<br><small>No size limit. Your file is not uploaded. It stays on your device.</small></label>
+  <input type="file" id="file" accept="video/*" hidden>
+  <p class="note" id="info"></p>
+  <p class="note">YouTube links cannot be imported here. If the video is yours, download it from YouTube Studio (Content, then the three dots, then Download) and choose the file above.</p></div>
+
+ <div class="card"><h2>2. Platform and clip length</h2>
+  <div class="row"><div><label>Platform preset</label><select id="plat"><option value="reels">Instagram Reels (9:16)</option><option value="tiktok">TikTok (9:16)</option><option value="shorts">YouTube Shorts (9:16)</option><option value="yt">YouTube video (16:9)</option><option value="sq">Instagram post (1:1)</option><option value="p45">Instagram post (4:5)</option></select></div>
+  <div><label>Length of each clip (seconds)</label><input type="number" id="len" min="3" max="3600" value="30"></div>
+  <div><label>Number of clips</label><input type="number" id="cnt" min="1" max="20" value="5"></div></div>
+  <div class="row adv"><div><label>Scan speed</label><select id="rate"><option value="4">Accurate (4x)</option><option value="8" selected>Fast (8x)</option></select></div>
+  <div><label>Pick moments by (left: loud sound, right: lots of movement)</label><input type="range" id="sens" min="0" max="100" value="40"></div></div>
+  <div style="margin-top:12px"><button class="p" id="an" disabled>Find best moments</button> <button id="stop" disabled>Stop</button></div>
+  <div class="bar"><i id="pg"></i></div><p class="note" id="ps"></p>
+  <div class="hot" id="hot" title="Click to jump to this point"></div></div>
+
+ <div class="card adv"><h2>3. Frame and background</h2>
+  <label>Layout</label><select id="lay"><option value="fit">Video in the center + background</option><option value="fill">Fill the whole screen (crop)</option><option value="split">Gameplay on top + facecam below</option></select>
+  <div class="row"><div><label>How much of the screen to show (zoom)</label><input type="range" id="zoom" min="1" max="4" step="0.05" value="1"></div>
+  <div><label>Blur amount</label><input type="range" id="blur" min="6" max="40" value="18"></div></div>
+  <div class="row"><div><label>Left / Right</label><input type="range" id="ox" min="-1" max="1" step="0.02" value="0"></div>
+  <div><label>Up / Down</label><input type="range" id="oy" min="-1" max="1" step="0.02" value="0"></div></div>
+  <p class="note">More zoom shows only a smaller part of the video. Use Left / Right and Up / Down to move that part.</p>
+  <div id="bgbox"><h2 style="margin-top:16px">Background behind the video</h2>
+   <div class="row"><div><label>Background type</label><select id="bgm"><option value="blur">Blurred copy of the video</option><option value="image">My image</option><option value="video">My video (plays silently in a loop)</option><option value="color">Solid color</option></select></div>
+   <div><label>Color (for solid color)</label><input type="color" id="bgc" value="#101428"></div></div>
+   <label>Image or video file for the background</label><input type="file" id="bgf" accept="image/*,video/*">
+   <p class="note">Choosing a file switches the background type for you.</p></div>
+  <div id="splitbox" style="display:none"><h2 style="margin-top:16px">Facecam layout</h2>
+   <div class="row"><div><label>Top part height (%)</label><input type="range" id="cs" min="30" max="85" value="65"></div><div><label>Facecam size</label><input type="range" id="cz" min="8" max="60" value="25"></div></div>
+   <div class="row"><div><label>Facecam left / right</label><input type="range" id="cx" min="0" max="100" value="100"></div><div><label>Facecam up / down</label><input type="range" id="cy" min="0" max="100" value="100"></div></div>
+   <canvas id="srcv" width="480" height="270"></canvas>
+   <p class="note">Blue box: gameplay area. Yellow box: facecam area. Move the sliders until the yellow box is on the facecam.</p></div></div>
+
+ <div class="card adv"><h2>4. Audio</h2>
+  <label>Game audio (the sound of the video)</label><input type="range" id="gv" min="0" max="2" step="0.05" value="1">
+  <label>Player voice / commentary (separate audio file, optional)</label>
+  <input type="file" id="vof" accept="audio/*,video/*"><input type="range" id="vv" min="0" max="2" step="0.05" value="1" style="margin-top:8px">
+  <p class="note">Game sound and player voice cannot be separated if they are mixed in one video. If you have the player voice as a separate file, add it here and you can control both volumes. The voice file must be in sync with the video.</p></div>
+
+ <div class="card adv"><h2>5. Subtitle</h2>
+  <label class="chk"><input type="checkbox" id="sg" checked> Show game subtitles</label>
+  <label class="chk"><input type="checkbox" id="sp" checked> Show player subtitles</label>
+  <div class="row"><div><label>Size</label><input type="range" id="ss" min="24" max="90" value="52"></div><div><label>Position (from bottom)</label><input type="range" id="sy" min="4" max="60" value="16"></div></div>
+  <details style="margin-top:10px"><summary>Add subtitle</summary>
+   <div class="row"><div><label>Track</label><select id="st"><option value="game">Game</option><option value="player">Player</option></select></div>
+   <div><label>Start (sec)</label><input type="number" id="s0" step="0.1" value="0"></div><div><label>End (sec)</label><input type="number" id="s1" step="0.1" value="3"></div></div>
+   <label>Text</label><input type="text" id="stx"><div style="margin-top:8px" class="row"><button id="sadd">Add line</button><button id="sclr">Clear track</button></div>
+   <label>Or import an .srt file (into the track chosen above)</label><input type="file" id="srt" accept=".srt">
+   <p class="note" id="sinfo">Game: 0 lines, Player: 0 lines. The browser cannot make subtitles from audio, so use an .srt file or add lines by hand.</p></details></div>
+
+ <div class="card adv"><h2>6. Swear-word mute</h2>
+  <label class="chk"><input type="checkbox" id="me" checked> Mute the sound when a swear word is said</label>
+  <label class="chk"><input type="checkbox" id="mc" checked> Hide swear words in subtitles with ****</label>
+  <div class="row"><div><label>How to mute</label><select id="mm"><option value="word">Only around that word (estimated)</option><option value="line">The whole subtitle line</option></select></div><div><label>Extra padding (sec)</label><input type="range" id="mp" min="0" max="1" step="0.05" value="0.2"></div></div>
+  <label>Swear-word list (separate with commas, edit as you like)</label>
+  <textarea id="bw" rows="3">fuck, shit, bitch, asshole, bastard, dick, cunt, madarchod, behenchod, bhosdike, chutiya, gandu, harami, randi, lund, gaand, mc, bc, bkl</textarea>
+  <details style="margin-top:10px"><summary>Manual mute (exact time)</summary>
+   <div class="row"><div><label>Start (sec)</label><input type="number" id="m0" step="0.1" value="0"></div><div><label>End (sec)</label><input type="number" id="m1" step="0.1" value="1"></div></div>
+   <div style="margin-top:8px" class="row"><button id="ma">Add mute range</button><button id="mx">Remove manual ranges</button></div></details>
+  <p class="note" id="minfo">0 places will be muted.</p>
+  <p class="note">The browser cannot recognize words in audio, so automatic muting works from the timing of your subtitle lines (game or player track). Import an .srt first or add lines (an .srt made by CapCut or Whisper works). The time of a word inside a line is only estimated, so increase the padding or use Manual mute for exact timing.</p></div>
+
+ <div class="card adv"><h2>7. Hook text, watermark and logo</h2>
+  <div class="row"><div style="flex:3"><label>Hook text at the top (for example: Wait for the end)</label><input type="text" id="hook"></div><div><label>Show for (sec)</label><input type="number" id="hookt" min="1" max="60" value="3"></div></div>
+  <label>Watermark text (small, bottom right)</label><input type="text" id="wm" placeholder="@yourchannel">
+  <label>Logo image (top right, optional)</label><input type="file" id="logof" accept="image/*">
+  <p class="note">The preview always shows the hook text. In the exported clip it shows only for the first seconds.</p></div>
+</div></div>
+
+<div class="card"><h2>Best moments</h2><p class="note" id="cinfo">First choose a video and click Find best moments.</p>
+ <div class="clip" style="margin-top:10px"><b>Manual cut</b>
+ <div class="row" style="align-items:end"><div><label>Start (sec)</label><input type="number" id="c0" step="0.1" min="0" value="0"></div><div><label>End (sec)</label><input type="number" id="c1" step="0.1" value="30"></div></div>
+ <div class="row" style="margin-top:8px"><button id="c0n">Start = current point</button><button id="c1n">End = current point</button><button class="p" id="cadd">Add clip</button></div>
+ <p class="note">Use the seek bar or play the video and stop where you want, set Start and End, then click Add clip. You do not need to scan for best moments first.</p></div>
+ <div class="row" style="margin-top:12px"><button class="p" id="xall">Export all clips</button><button id="dall">Download all finished clips</button><button id="zall">Make a ZIP of finished clips</button><button id="jall">Export joined clips</button></div>
+ <p class="note" id="gst"></p><p class="note" id="jo"></p>
+ <p class="note">Each clip exports in the background, so you can keep previewing while it runs. Tick Join on two or more clips and use Export joined clips to make one video (this is also how you cut out a middle part: make two clips and join them).</p>
+ <div id="clips"></div>
+ <p class="note" style="margin-top:14px">After downloading, upload from here:</p>
+ <div><a class="btn" target="_blank" rel="noopener" href="https://www.instagram.com/">Instagram</a><a class="btn" target="_blank" rel="noopener" href="https://studio.youtube.com/">YouTube Studio</a><a class="btn" target="_blank" rel="noopener" href="https://www.tiktok.com/upload">TikTok</a></div>
+ <p class="note">Export runs in real time (a 30 second clip takes about 30 seconds). Keep this tab open and active while exporting. Direct upload to the platforms needs their login and API, so you must download the clip and upload it yourself.</p></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),X=cv.getContext('2d'),sv=$('srcv'),sx2=sv.getContext('2d');
+const v=document.createElement('video');v.playsInline=true;v.preload='auto';
+let dur=0,score=[],SA=[],SB=[],clips=[],limit=null,dirty=true,stopFlag=false,busy=false,scanning=false,soundOn=true,AC,an,gg,gate,mon,vo,vg,voURL=null,mr=[],man=[],WL=[],bgImg=null,bgv=null,bgURL=null,bgKind=null,logoImg=null,tv=null,tq=Promise.resolve();
+const subs={game:[],player:[]};
+const PL={reels:[9,16,30],tiktok:[9,16,45],shorts:[9,16,45],yt:[16,9,60],sq:[1,1,30],p45:[4,5,30]};
+const fmt=t=>{t=Math.max(0,t|0);return(t/60|0)+':'+String(t%60).padStart(2,'0')};
+const once=(el,ev)=>new Promise(r=>el.addEventListener(ev,r,{once:true}));
+const wait=(p,ms)=>Promise.race([p,new Promise(r=>setTimeout(r,ms))]);
+function size(){const[a,b]=PL[$('plat').value],L=a===b?1080:1920;if(a>=b){cv.width=L;cv.height=Math.round(L*b/a)}else{cv.height=L;cv.width=Math.round(L*a/b)}dirty=true}
+$('plat').onchange=()=>{$('len').value=PL[$('plat').value][2];size();if(score.length)pick()};
+
+/* saved settings and easy mode */
+const IDS=['plat','len','cnt','rate','sens','lay','zoom','blur','ox','oy','bgm','bgc','cs','cz','cx','cy','gv','vv','sg','sp','ss','sy','me','mc','mm','mp','bw','hook','hookt','wm'];
+function saveS(){try{const o={easy:document.body.classList.contains('easy')};IDS.forEach(i=>{const e=$(i);o[i]=e.type==='checkbox'?e.checked:e.value});localStorage.setItem('cf_s',JSON.stringify(o))}catch(_){}}
+function loadS(){try{const o=JSON.parse(localStorage.getItem('cf_s')||'null');if(!o)return;IDS.forEach(i=>{if(!(i in o))return;const e=$(i);if(e.type==='checkbox')e.checked=o[i];else e.value=o[i]});document.body.classList.toggle('easy',o.easy!==false)}catch(_){}}
+IDS.forEach(i=>['input','change'].forEach(n=>$(i).addEventListener(n,saveS)));
+const modeTxt=()=>$('mode').textContent=document.body.classList.contains('easy')?'Switch to Advanced mode':'Switch to Easy mode';
+$('mode').onclick=()=>{document.body.classList.toggle('easy');modeTxt();saveS()};
+function laySync(){const l=$('lay').value;$('splitbox').style.display=l==='split'?'block':'none';$('bgbox').style.display=l==='fit'?'block':'none';dirty=true}
+$('lay').addEventListener('change',laySync);
+
+/* audio (preview) */
+function setMon(){if(mon)mon.gain.value=soundOn&&!scanning?1:0}
+function initAudio(){if(AC)return;AC=new(window.AudioContext||window.webkitAudioContext)();const s=AC.createMediaElementSource(v);an=AC.createAnalyser();an.fftSize=1024;gg=AC.createGain();gate=AC.createGain();mon=AC.createGain();s.connect(an);s.connect(gg);gg.connect(gate);gate.connect(mon);mon.connect(AC.destination);gg.gain.value=+$('gv').value;setMon()}
+const toggleSound=()=>{soundOn=!soundOn;$('snd').textContent='Sound: '+(soundOn?'On':'Off');$('snd').setAttribute('aria-pressed',soundOn);setMon()};
+$('snd').onclick=toggleSound;
+$('gv').oninput=()=>{if(gg)gg.gain.value=+$('gv').value};
+$('vv').oninput=()=>{if(vg)vg.gain.value=+$('vv').value};
+$('vof').onchange=e=>{const f=e.target.files[0];if(!f)return;initAudio();voURL=URL.createObjectURL(f);vo=new Audio(voURL);const s=AC.createMediaElementSource(vo);vg=AC.createGain();vg.gain.value=+$('vv').value;s.connect(vg);vg.connect(gate)};
+v.addEventListener('play',()=>{if(vo){vo.currentTime=v.currentTime;vo.play().catch(()=>{})}});
+v.addEventListener('pause',()=>vo&&vo.pause());
+v.addEventListener('seeked',()=>{if(vo)vo.currentTime=v.currentTime;dirty=true});
+
+/* background and logo files */
+function makeBg(u){const e=document.createElement('video');e.src=u;e.loop=true;e.muted=true;e.playsInline=true;e.play().catch(()=>{});return e}
+$('bgf').onchange=e=>{const f=e.target.files[0];if(!f)return;bgURL=URL.createObjectURL(f);if(f.type.startsWith('video')){bgKind='video';bgv=makeBg(bgURL);$('bgm').value='video'}else{bgKind='image';bgImg=new Image();bgImg.onload=()=>dirty=true;bgImg.src=bgURL;$('bgm').value='image'}saveS();dirty=true};
+$('logof').onchange=e=>{const f=e.target.files[0];if(!f)return;logoImg=new Image();logoImg.onload=()=>dirty=true;logoImg.src=URL.createObjectURL(f)};
+
+/* load video */
+function load(f){if(!f)return;v.src=URL.createObjectURL(f);tv=document.createElement('video');tv.muted=true;tv.preload='auto';tv.src=v.src;v.onloadedmetadata=()=>{dur=v.duration;score=[];SA=[];SB=[];clips=[];$('clips').innerHTML='';$('hot').innerHTML='';$('an').disabled=false;$('info').textContent=f.name+' | '+fmt(dur)+' | '+v.videoWidth+'x'+v.videoHeight+' | '+(f.size/1048576).toFixed(0)+' MB';size();v.currentTime=0.1}}
+$('file').onchange=e=>load(e.target.files[0]);
+const dr=$('drop');['dragover','dragenter'].forEach(n=>dr.addEventListener(n,e=>{e.preventDefault();dr.classList.add('on')}));['dragleave','drop'].forEach(n=>dr.addEventListener(n,e=>{e.preventDefault();dr.classList.remove('on')}));dr.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+$('pp').onclick=()=>{if(!dur)return;initAudio();AC.resume();setMon();limit=null;v.paused?v.play():v.pause()};
+$('seek').oninput=e=>{if(dur)v.currentTime=e.target.value/1000*dur};
+$('hot').onclick=e=>{if(!dur)return;const r=$('hot').getBoundingClientRect();v.currentTime=(e.clientX-r.left)/r.width*dur};
+['lay','zoom','blur','ox','oy','sg','sp','ss','sy','mc','bgm','bgc','cs','cz','cx','cy','hook','hookt','wm'].forEach(i=>$(i).addEventListener('input',()=>dirty=true));
+
+/* drawing (shared by preview and background exports) */
+const getS=()=>({lay:$('lay').value,zoom:+$('zoom').value,blur:+$('blur').value,ox:+$('ox').value,oy:+$('oy').value,bgm:$('bgm').value,bgc:$('bgc').value,cs:+$('cs').value,cz:+$('cz').value,cx:+$('cx').value,cy:+$('cy').value,sg:$('sg').checked,sp:$('sp').checked,ss:+$('ss').value,sy:+$('sy').value,mc:$('mc').checked,w:WL,hook:$('hook').value.trim(),hookt:+$('hookt').value||3,wm:$('wm').value.trim()});
+const bg=document.createElement('canvas'),bx=bg.getContext('2d');
+function region(vd,S){const vw=vd.videoWidth,vh=vd.videoHeight,rw=vw/S.zoom,rh=vh/S.zoom,cx=vw/2+S.ox*(vw-rw)/2,cy=vh/2+S.oy*(vh-rh)/2;return[cx-rw/2,cy-rh/2,rw,rh]}
+function camRect(vd,S,W,h){const vw=vd.videoWidth,vh=vd.videoHeight;let rw=vw*S.cz/100,rh=rw*h/W;if(rh>vh){rh=vh;rw=rh*W/h}return[S.cx/100*(vw-rw),S.cy/100*(vh-rh),rw,rh]}
+function cover(c,vd,[rx,ry,rw,rh],W,H,dx,dy){const s=Math.max(W/rw,H/rh),sw=W/s,sh=H/s;c.drawImage(vd,rx+(rw-sw)/2,ry+(rh-sh)/2,sw,sh,dx||0,dy||0,W,H)}
+function covEl(c,el,w,h,W,H){const s=Math.max(W/w,H/h),sw=W/s,sh=H/s;c.drawImage(el,(w-sw)/2,(h-sh)/2,sw,sh,0,0,W,H)}
+function drawBg(c,W,H,S,vd,R,B){
+ if(S.bgm==='color'){c.fillStyle=S.bgc;c.fillRect(0,0,W,H);return}
+ if(S.bgm==='image'&&B.img&&B.img.naturalWidth){covEl(c,B.img,B.img.naturalWidth,B.img.naturalHeight,W,H);return}
+ if(S.bgm==='video'&&B.vid&&B.vid.videoWidth){covEl(c,B.vid,B.vid.videoWidth,B.vid.videoHeight,W,H);return}
+ bg.width=Math.max(8,W/S.blur|0);bg.height=Math.max(8,H/S.blur|0);cover(bx,vd,R,bg.width,bg.height);
+ c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(bg,0,0,W,H);c.fillStyle='rgba(0,0,0,.25)';c.fillRect(0,0,W,H)}
+function draw(c,cs,vd,S,sb,B,rel){const W=cs.width,H=cs.height;if(!vd.videoWidth){c.fillStyle='#000';c.fillRect(0,0,W,H);return}
+ const R=region(vd,S);
+ if(S.lay==='fill'){cover(c,vd,R,W,H)}
+ else if(S.lay==='split'){const th=Math.round(H*S.cs/100);cover(c,vd,R,W,th,0,0);cover(c,vd,camRect(vd,S,W,H-th),W,H-th,0,th);c.fillStyle='rgba(0,0,0,.6)';c.fillRect(0,th-2,W,4)}
+ else{drawBg(c,W,H,S,vd,R,B);const s=Math.min(W/R[2],H/R[3]),dw=R[2]*s,dh=R[3]*s;c.drawImage(vd,R[0],R[1],R[2],R[3],(W-dw)/2,(H-dh)/2,dw,dh)}
+ overlays(c,W,H,S,rel);subsDraw(c,W,H,vd.currentTime,S,sb)}
+function drawSrc(S){if(!v.videoWidth)return;sv.width=480;sv.height=Math.round(480*v.videoHeight/v.videoWidth);sx2.drawImage(v,0,0,sv.width,sv.height);const k=sv.width/v.videoWidth,R=region(v,S),th=Math.round(cv.height*S.cs/100),cr=camRect(v,S,cv.width,cv.height-th);sx2.lineWidth=3;sx2.strokeStyle='#4f7bff';sx2.strokeRect(R[0]*k,R[1]*k,R[2]*k,R[3]*k);sx2.strokeStyle='#ffd23f';sx2.strokeRect(cr[0]*k,cr[1]*k,cr[2]*k,cr[3]*k)}
+function wrap(c,t,mw){const w=t.split(' '),o=[];let l='';for(const x of w){const n=l?l+' '+x:x;if(c.measureText(n).width>mw&&l){o.push(l);l=x}else l=n}if(l)o.push(l);return o}
+function overlays(c,W,H,S,rel){
+ if(logoImg&&logoImg.naturalWidth){const w=W*.16,h=w*logoImg.naturalHeight/logoImg.naturalWidth;c.globalAlpha=.9;c.drawImage(logoImg,W-w-W*.04,H*.04,w,h);c.globalAlpha=1}
+ if(S.hook&&rel<S.hookt){const fs=W*.07;c.font='900 '+fs+'px system-ui,sans-serif';c.textAlign='center';c.textBaseline='top';c.lineJoin='round';c.lineWidth=fs/4;let y=H*.08;wrap(c,S.hook,W*.84).forEach(l=>{c.strokeStyle='#000';c.strokeText(l,W/2,y);c.fillStyle='#fff';c.fillText(l,W/2,y);y+=fs*1.15})}
+ if(S.wm){const fs=W*.03;c.font='700 '+fs+'px system-ui,sans-serif';c.textAlign='right';c.textBaseline='bottom';c.lineWidth=fs/6;c.globalAlpha=.75;c.strokeStyle='#000';c.strokeText(S.wm,W-W*.04,H-H*.025);c.fillStyle='#fff';c.fillText(S.wm,W-W*.04,H-H*.025);c.globalAlpha=1}}
+function subsDraw(c,W,H,t,S,sb){const fs=S.ss*W/1080;c.font='800 '+fs+'px system-ui,sans-serif';c.textAlign='center';c.textBaseline='bottom';c.lineJoin='round';c.lineWidth=fs/4;let y=H-H*S.sy/100;
+ for(const[k,col,on]of[['game','#fff',S.sg],['player','#ffd23f',S.sp]]){if(!on)continue;const a=sb[k].find(z=>t>=z.s&&t<=z.e);if(!a)continue;wrap(c,cens(a.t,S),W*.86).reverse().forEach(l=>{c.strokeStyle='#000';c.strokeText(l,W/2,y);c.fillStyle=col;c.fillText(l,W/2,y);y-=fs*1.15});y-=fs*.3}}
+(function loop(){if(limit!=null&&v.currentTime>=limit){v.pause();limit=null}
+ applyMute();const S=getS(),need=!v.paused||dirty||(S.lay==='fit'&&S.bgm==='video');
+ if(need){draw(X,cv,v,S,subs,{img:bgImg,vid:bgv},0);if(S.lay==='split')drawSrc(S);dirty=false}
+ if(dur){$('tm').textContent=fmt(v.currentTime)+' / '+fmt(dur);if(!busy)$('seek').value=v.currentTime/dur*1000}
+ requestAnimationFrame(loop)})();
+
+/* subtitles */
+function parseSrt(t){const o=[];t.replace(/\r/g,'').split(/\n\n+/).forEach(b=>{const m=b.match(/(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)\s*\n([\s\S]+)/);if(m){const f=(h,mi,s,ms)=>+h*3600+ +mi*60+ +s+ +ms/1000;o.push({s:f(m[1],m[2],m[3],m[4]),e:f(m[5],m[6],m[7],m[8]),t:m[9].replace(/\n/g,' ').trim()})}});return o}
+const si=()=>{buildMute();$('sinfo').textContent='Game: '+subs.game.length+' lines, Player: '+subs.player.length+' lines.'};
+$('sadd').onclick=()=>{const t=$('stx').value.trim();if(!t)return;subs[$('st').value].push({s:+$('s0').value,e:+$('s1').value,t});$('stx').value='';si();dirty=true};
+$('sclr').onclick=()=>{subs[$('st').value]=[];si();dirty=true};
+$('srt').onchange=async e=>{const f=e.target.files[0];if(!f)return;subs[$('st').value]=parseSrt(await f.text());si();dirty=true};
+
+/* swear-word mute */
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const wl=()=>$('bw').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+function bad(t,w){t=t.toLowerCase();return w.some(x=>x.length<=3?new RegExp('(^|[^\\p{L}])'+esc(x)+'($|[^\\p{L}])','u').test(t):t.includes(x))}
+function cens(t,S){if(!S.mc)return t;return t.split(' ').map(x=>bad(x,S.w)?x[0]+'*'.repeat(Math.max(2,x.length-1)):x).join(' ')}
+function buildMute(){WL=wl();mr=[];if($('me').checked){const pad=+$('mp').value,word=$('mm').value==='word';for(const k of['game','player'])for(const l of subs[k]){if(!bad(l.t,WL))continue;if(!word){mr.push([l.s-pad,l.e+pad]);continue}let i=0;const L=l.t.length,d=l.e-l.s;for(const x of l.t.split(' ')){if(x&&bad(x,WL))mr.push([l.s+i/L*d-pad,l.s+(i+x.length)/L*d+pad]);i+=x.length+1}}}
+ man.forEach(r=>mr.push(r));$('minfo').textContent=mr.length+' places will be muted ('+man.length+' manual).';dirty=true}
+const muted=(t,a)=>a.some(r=>t>=r[0]&&t<=r[1]);
+function applyMute(){if(!gate)return;gate.gain.setTargetAtTime(muted(v.currentTime,mr)?0:1,AC.currentTime,.008)}
+['me','mc','mp','mm','bw'].forEach(i=>$(i).addEventListener('input',buildMute));
+$('ma').onclick=()=>{const a=+$('m0').value,b=+$('m1').value;if(b>a){man.push([a,b]);buildMute()}};
+$('mx').onclick=()=>{man=[];buildMute()};
+
+/* analysis */
+$('stop').onclick=()=>stopFlag=true;
+$('an').onclick=async()=>{initAudio();await AC.resume();scanning=true;setMon();stopFlag=false;$('an').disabled=true;$('stop').disabled=false;busy=true;
+ const n=Math.ceil(dur),e=new Float32Array(n),m=new Float32Array(n),sc=document.createElement('canvas');sc.width=32;sc.height=18;const sx=sc.getContext('2d',{willReadFrequently:true}),buf=new Float32Array(an.fftSize);let prev=null;
+ v.pause();v.currentTime=0;await new Promise(r=>setTimeout(r,250));v.playbackRate=+$('rate').value;
+ try{await v.play()}catch(err){$('ps').textContent='Could not play the video: '+err.message;$('an').disabled=false;busy=false;scanning=false;setMon();return}
+ await new Promise(res=>{const t=setInterval(()=>{const i=Math.min(n-1,v.currentTime|0);an.getFloatTimeDomainData(buf);let s=0;for(let k=0;k<buf.length;k++)s+=buf[k]*buf[k];e[i]=Math.max(e[i],Math.sqrt(s/buf.length));
+  try{sx.drawImage(v,0,0,32,18);const d=sx.getImageData(0,0,32,18).data;if(prev){let df=0;for(let k=0;k<d.length;k+=4)df+=Math.abs(d[k]-prev[k])+Math.abs(d[k+1]-prev[k+1]);m[i]=Math.max(m[i],df/(d.length/4))}prev=d}catch(_){}
+  $('pg').style.width=(v.currentTime/dur*100)+'%';$('ps').textContent='Scanning: '+fmt(v.currentTime)+' / '+fmt(dur);
+  if(v.ended||v.currentTime>=dur-.3||stopFlag){clearInterval(t);res()}},40)});
+ v.pause();v.playbackRate=1;scanning=false;setMon();busy=false;
+ for(let i=1;i<n;i++){if(!e[i]&&!m[i]){e[i]=e[i-1];m[i]=m[i-1]}}
+ const em=Math.max(...e)||1,mm=Math.max(...m)||1;SA=Array.from(e,x=>x/em);SB=Array.from(m,x=>x/mm);
+ $('pg').style.width='100%';$('ps').textContent=stopFlag?'Stopped early. Clips were made from the data so far.':'Scan complete.';$('an').disabled=false;$('stop').disabled=true;pick()};
+$('len').onchange=$('cnt').onchange=$('sens').onchange=()=>{if(SA.length)pick()};
+function pick(){const sw=+$('sens').value/100;score=SA.map((a,i)=>(1-sw)*a+sw*SB[i]);
+ const L=Math.min(+$('len').value||30,Math.floor(dur)),N=+$('cnt').value||5,n=score.length,P=[0];for(let i=0;i<n;i++)P.push(P[i]+score[i]);
+ const w=[];for(let s=0;s+L<=n;s++)w.push([s,P[s+L]-P[s]]);w.sort((a,b)=>b[1]-a[1]);const out=[];
+ for(const[s,sc]of w){if(out.length>=N)break;if(out.every(o=>Math.abs(o.s-s)>=L))out.push({s,e:s+L,sc})}
+ if(!out.length)out.push({s:0,e:Math.min(L,dur),sc:0});const mx=Math.max(...out.map(o=>o.sc))||1;out.forEach(o=>o.sc=Math.round(o.sc/mx*100));
+ clips=out;render()}
+function hot(){const h=$('hot'),B=80,n=score.length;h.innerHTML='';for(let b=0;b<B;b++){const a=b/B*n|0,z=(b+1)/B*n|0;let m=0;for(let i=a;i<=z&&i<n;i++)m=Math.max(m,score[i]);const el=document.createElement('i');el.style.height=Math.max(4,m*100)+'%';if(clips.some(c=>c.s<=z&&c.e>=a))el.className='in';h.appendChild(el)}}
+
+/* thumbnails */
+function thumb(c){tq=tq.then(async()=>{if(!tv||!c.el||!tv.videoWidth&&!tv.readyState)return;const cn=c.el.querySelector('canvas');if(!cn)return;const t=Math.min(dur-.1,c.s+(c.e-c.s)/2);if(Math.abs(tv.currentTime-t)>.05){tv.currentTime=t;await wait(once(tv,'seeked'),2000)}
+ if(tv.videoWidth)covEl(cn.getContext('2d'),tv,tv.videoWidth,tv.videoHeight,cn.width,cn.height)}).catch(()=>{})}
+
+/* clip list */
+function render(){if(score.length)hot();$('cinfo').textContent=clips.length+' clips found. Drag the sliders or change the numbers to adjust each clip.';const box=$('clips');box.innerHTML='';
+ clips.forEach((c,i)=>{const d=document.createElement('div');d.className='clip';c.el=d;
+  d.innerHTML='<div class="ch"><canvas width="160" height="90"></canvas><div><b>Clip '+(i+1)+'</b> <b class="sc">'+(c.man?'manual':'score '+c.sc)+'</b><br><span class="note" data-d></span><label>Start</label><input type="range" min="0" max="'+dur+'" step="0.1" data-rs><label>End</label><input type="range" min="0" max="'+dur+'" step="0.1" data-re></div></div><div class="row" style="align-items:end;margin-top:4px"><div><label>Start (sec)</label><input type="number" step="0.5" min="0" data-s></div><div><label>End (sec)</label><input type="number" step="0.5" data-e></div><label class="chk"><input type="checkbox" data-j'+(c.join?' checked':'')+'> Join</label></div><div style="margin-top:8px" class="row"><button data-p>Preview</button><button data-a>Start = now</button><button data-b>End = now</button><button class="p" data-x>Export HD</button><button data-r>Remove</button></div><div style="margin-top:8px" data-o></div>';
+  const q=s=>d.querySelector(s),sync=()=>{q('[data-s]').value=c.s;q('[data-e]').value=c.e;q('[data-rs]').value=c.s;q('[data-re]').value=c.e;q('[data-d]').textContent=fmt(c.s)+' to '+fmt(c.e)+' ('+Math.round(c.e-c.s)+' sec)'};
+  const setR=(s,e)=>{c.s=Math.max(0,Math.min(s,dur));c.e=Math.max(0,Math.min(e,dur));c.blob=null;if(!c.busy)q('[data-o]').innerHTML='';sync()};
+  sync();
+  q('[data-rs]').oninput=()=>setR(+q('[data-rs]').value,c.e);q('[data-re]').oninput=()=>setR(c.s,+q('[data-re]').value);
+  q('[data-s]').onchange=()=>{setR(+q('[data-s]').value,c.e);thumb(c)};q('[data-e]').onchange=()=>{setR(c.s,+q('[data-e]').value);thumb(c)};
+  q('[data-rs]').onchange=q('[data-re]').onchange=()=>thumb(c);
+  q('[data-j]').onchange=e=>c.join=e.target.checked;
+  q('[data-p]').onclick=()=>{initAudio();AC.resume();setMon();limit=c.e;v.currentTime=c.s;v.play()};
+  q('[data-a]').onclick=()=>{setR(v.currentTime,c.e);thumb(c)};
+  q('[data-b]').onclick=()=>{setR(c.s,v.currentTime);thumb(c)};
+  q('[data-r]').onclick=()=>{clips.splice(clips.indexOf(c),1);render()};
+  q('[data-x]').onclick=()=>exportClip(c);
+  if(c.busy)q('[data-x]').disabled=true;if(c.blob)dlBtn(c);thumb(c);box.appendChild(d)})}
+$('c0n').onclick=()=>$('c0').value=v.currentTime.toFixed(1);
+$('c1n').onclick=()=>$('c1').value=v.currentTime.toFixed(1);
+$('cadd').onclick=()=>{if(!dur)return;const s=Math.max(0,+$('c0').value),e=Math.min(dur,+$('c1').value);if(e<=s)return;clips.push({s,e,sc:0,man:1});render()};
+
+/* export: every job uses its own hidden video, canvas and audio chain, so the preview stays free */
+async function renderVideo(segs,onP){initAudio();await AC.resume();
+ const mt=['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));if(!mt)throw new Error('nosupport');
+ const S=getS(),sb=JSON.parse(JSON.stringify(subs)),mrs=mr.slice(),W=cv.width,H=cv.height,total=segs.reduce((a,s)=>a+s[1]-s[0],0);
+ const ev=document.createElement('video');ev.playsInline=true;ev.preload='auto';ev.src=v.src;await once(ev,'loadedmetadata');
+ const eb=(S.bgm==='video'&&S.lay==='fit'&&bgKind==='video')?makeBg(bgURL):null,B={img:bgImg,vid:eb};
+ const ec=document.createElement('canvas');ec.width=W;ec.height=H;const ex=ec.getContext('2d');
+ const ds=AC.createMediaStreamDestination(),gt=AC.createGain(),g=AC.createGain();g.gain.value=+$('gv').value;
+ const s1=AC.createMediaElementSource(ev);s1.connect(g);g.connect(gt);gt.connect(ds);
+ let ea=null,s2=null,g2=null;if(voURL){ea=new Audio(voURL);s2=AC.createMediaElementSource(ea);g2=AC.createGain();g2.gain.value=+$('vv').value;s2.connect(g2);g2.connect(gt)}
+ ev.currentTime=segs[0][0];await once(ev,'seeked');draw(ex,ec,ev,S,sb,B,0);
+ const st=ec.captureStream(30);ds.stream.getAudioTracks().forEach(t=>st.addTrack(t));
+ const rec=new MediaRecorder(st,{mimeType:mt,videoBitsPerSecond:18e6,audioBitsPerSecond:192e3}),ch=[];rec.ondataavailable=x=>x.data.size&&ch.push(x.data);
+ const done=new Promise(r=>rec.onstop=r);rec.start(1000);if(ea){ea.currentTime=segs[0][0];ea.play().catch(()=>{})}await ev.play();
+ let k=0,acc=0;
+ await new Promise(res=>{const f=()=>{const el=acc+Math.max(0,ev.currentTime-segs[k][0]);draw(ex,ec,ev,S,sb,B,el);gt.gain.setTargetAtTime(muted(ev.currentTime,mrs)?0:1,AC.currentTime,.008);onP(Math.min(100,Math.round(el/total*100)));
+  if(ev.currentTime>=segs[k][1]||ev.ended){acc+=segs[k][1]-segs[k][0];k++;if(k>=segs.length)return res();ev.currentTime=segs[k][0];if(ea)ea.currentTime=segs[k][0];if(ev.paused)ev.play().catch(()=>{})}
+  requestAnimationFrame(f)};f()});
+ ev.pause();if(ea)ea.pause();rec.stop();await done;ev.removeAttribute('src');ev.load();if(eb){eb.pause();eb.removeAttribute('src');eb.load()}[s1,g,gt,s2,g2].forEach(n=>n&&n.disconnect());
+ return{ext:mt.includes('mp4')?'mp4':'webm',blob:new Blob(ch,{type:mt.split(';')[0]})}}
+const out=c=>c.el.querySelector('[data-o]');
+async function exportClip(c){if(c.busy||c.e<=c.s||!dur)return;c.busy=true;c.blob=null;c.el.querySelector('[data-x]').disabled=true;out(c).textContent='Preparing...';
+ try{const r=await renderVideo([[c.s,c.e]],p=>{if(c.el)out(c).textContent='Exporting: '+p+'%'});c.blob=r.blob;c.ext=r.ext;dlBtn(c)}
+ catch(err){if(c.el)out(c).textContent=err.message==='nosupport'?'This browser cannot export. Please use Chrome or Edge.':'Export failed: '+err.message}
+ c.busy=false;const b=c.el&&c.el.querySelector('[data-x]');if(b)b.disabled=false}
+async function saveBlob(name,blob,b,m){try{if(typeof claude==='undefined'){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();b.textContent='Downloaded';return true}const D=await claude.use('downloads');if(!D){m.append(' Download is not available in this view. Open the page on claude.ai.');return false}await D.save({filename:name,data:blob});b.textContent='Downloaded';return true}catch(err){b.textContent='Try again ('+((err&&err.code)||'error')+')';return false}}
+function dlBtn(c){const o=out(c);o.innerHTML='';const b=document.createElement('button');b.className='p';b.textContent='Download ('+c.ext+')';b.onclick=()=>saveBlob('clip-'+(clips.indexOf(c)+1)+'.'+c.ext,c.blob,b,o);o.appendChild(b)}
+$('xall').onclick=async()=>{for(const c of clips.slice())await exportClip(c)};
+$('dall').onclick=async()=>{for(const c of clips.slice()){if(!c.blob)continue;const b=out(c).querySelector('button');if(b)await saveBlob('clip-'+(clips.indexOf(c)+1)+'.'+c.ext,c.blob,b,out(c))}};
+$('zall').onclick=async()=>{const fin=clips.filter(c=>c.blob),g=$('gst');if(!fin.length){g.textContent='Export at least one clip first.';return}if(!window.JSZip){g.textContent='The ZIP tool could not load. Use Download all finished clips instead.';return}
+ g.textContent='Making ZIP...';const z=new JSZip();fin.forEach(c=>z.file('clip-'+(clips.indexOf(c)+1)+'.'+c.ext,c.blob));const zb=await z.generateAsync({type:'blob',compression:'STORE'});
+ g.innerHTML='';const b=document.createElement('button');b.className='p';b.textContent='Download ZIP';b.onclick=()=>saveBlob('clips.zip',zb,b,g);g.appendChild(b)};
+$('jall').onclick=async()=>{const segs=clips.filter(c=>c.join&&c.e>c.s).map(c=>[c.s,c.e]),o=$('jo');if(segs.length<2){o.textContent='Tick Join on at least two clips first.';return}
+ $('jall').disabled=true;try{const r=await renderVideo(segs,p=>o.textContent='Exporting joined video: '+p+'%');o.innerHTML='';const b=document.createElement('button');b.className='p';b.textContent='Download joined video ('+r.ext+')';b.onclick=()=>saveBlob('joined.'+r.ext,r.blob,b,o);o.appendChild(b)}
+ catch(err){o.textContent=err.message==='nosupport'?'This browser cannot export. Please use Chrome or Edge.':'Export failed: '+err.message}$('jall').disabled=false};
+
+/* keyboard shortcuts */
+addEventListener('keydown',e=>{const t=e.target,tag=t.tagName;if(e.ctrlKey||e.metaKey||e.altKey||tag==='TEXTAREA'||tag==='SELECT'||(tag==='INPUT'&&!['range','checkbox'].includes(t.type)))return;
+ const k=e.key.toLowerCase();if(k===' '&&tag!=='BUTTON'){e.preventDefault();$('pp').click()}
+ else if(k==='i')$('c0n').click();else if(k==='o')$('c1n').click();else if(k==='m')toggleSound();
+ else if(k==='arrowleft'&&tag!=='INPUT'&&dur)v.currentTime=Math.max(0,v.currentTime-5);else if(k==='arrowright'&&tag!=='INPUT'&&dur)v.currentTime=Math.min(dur,v.currentTime+5)});
+
+loadS();modeTxt();laySync();buildMute();size();
+</script></body></html>
